@@ -10,20 +10,20 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Arial', sans-serif;
             line-height: 1.6;
             color: #333;
             overflow-x: hidden;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
-        
+
         /* Header */
         header {
             background: linear-gradient(135deg, #2c5aa0, #1e3d72);
@@ -35,35 +35,35 @@
             z-index: 1000;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        
+
         nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .logo {
             font-size: 1.5rem;
             font-weight: bold;
             color: #fff;
         }
-        
+
         .nav-links {
             display: flex;
             list-style: none;
             gap: 2rem;
         }
-        
+
         .nav-links a {
             color: white;
             text-decoration: none;
             transition: color 0.3s ease;
         }
-        
+
         .nav-links a:hover {
             color: #ffd700;
         }
-        
+
         .mobile-menu {
             display: none;
             background: none;
@@ -72,7 +72,7 @@
             font-size: 1.5rem;
             cursor: pointer;
         }
-        
+
         /* Hero Section */
         .hero {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -82,7 +82,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .hero::before {
             content: '';
             position: absolute;
@@ -93,19 +93,19 @@
             background: rgba(0,0,0,0.3);
             z-index: 1;
         }
-        
+
         .hero-content {
             position: relative;
             z-index: 2;
             animation: fadeInUp 1s ease;
         }
-        
+
         .hero h1 {
             font-size: 3rem;
             margin-bottom: 1rem;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        
+
         .hero p {
             font-size: 1.2rem;
             margin-bottom: 2rem;
@@ -113,7 +113,7 @@
             margin-left: auto;
             margin-right: auto;
         }
-        
+
         .cta-button {
             background: linear-gradient(45deg, #ffd700, #ffed4e);
             color: #333;
@@ -128,32 +128,32 @@
             display: inline-block;
             box-shadow: 0 4px 15px rgba(255,215,0,0.3);
         }
-        
+
         .cta-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(255,215,0,0.4);
         }
-        
+
         /* Services Section */
         .services {
             padding: 80px 0;
             background: #f8f9fa;
         }
-        
+
         .section-title {
             text-align: center;
             font-size: 2.5rem;
             margin-bottom: 3rem;
             color: #2c5aa0;
         }
-        
+
         .services-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
             margin-top: 3rem;
         }
-        
+
         .service-card {
             background: white;
             padding: 2rem;
@@ -164,7 +164,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .service-card::before {
             content: '';
             position: absolute;
@@ -174,42 +174,42 @@
             height: 4px;
             background: linear-gradient(45deg, #667eea, #764ba2);
         }
-        
+
         .service-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
-        
+
         .service-icon {
             font-size: 3rem;
             margin-bottom: 1rem;
             color: #2c5aa0;
         }
-        
+
         .service-card h3 {
             font-size: 1.5rem;
             margin-bottom: 1rem;
             color: #333;
         }
-        
+
         .service-card p {
             color: #666;
             line-height: 1.6;
         }
-        
+
         /* Target Audience */
         .audience {
             padding: 80px 0;
             background: white;
         }
-        
+
         .audience-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 2rem;
             margin-top: 3rem;
         }
-        
+
         .audience-card {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
@@ -218,16 +218,16 @@
             text-align: center;
             transition: all 0.3s ease;
         }
-        
+
         .audience-card:hover {
             transform: scale(1.05);
         }
-        
+
         .audience-card h3 {
             font-size: 1.3rem;
             margin-bottom: 1rem;
         }
-        
+
         /* Contact Section */
         .contact {
             background: linear-gradient(135deg, #2c5aa0, #1e3d72);
@@ -235,22 +235,22 @@
             padding: 80px 0;
             text-align: center;
         }
-        
+
         .contact-content {
             max-width: 600px;
             margin: 0 auto;
         }
-        
+
         .contact h2 {
             font-size: 2.5rem;
             margin-bottom: 1rem;
         }
-        
+
         .contact p {
             font-size: 1.2rem;
             margin-bottom: 2rem;
         }
-        
+
         .contact-info {
             display: flex;
             justify-content: center;
@@ -258,17 +258,17 @@
             margin-top: 2rem;
             flex-wrap: wrap;
         }
-        
+
         .contact-item {
             text-align: center;
         }
-        
+
         .contact-item i {
             font-size: 2rem;
             margin-bottom: 0.5rem;
             color: #ffd700;
         }
-        
+
         /* Footer */
         footer {
             background: #333;
@@ -276,7 +276,7 @@
             text-align: center;
             padding: 2rem 0;
         }
-        
+
         /* Animations */
         @keyframes fadeInUp {
             from {
@@ -288,29 +288,29 @@
                 transform: translateY(0);
             }
         }
-        
+
         .fade-in {
             animation: fadeInUp 0.6s ease forwards;
         }
-        
+
         /* Responsive */
         @media (max-width: 768px) {
             .nav-links {
                 display: none;
             }
-            
+
             .mobile-menu {
                 display: block;
             }
-            
+
             .hero h1 {
                 font-size: 2rem;
             }
-            
+
             .hero p {
                 font-size: 1rem;
             }
-            
+
             .contact-info {
                 flex-direction: column;
                 gap: 1rem;
@@ -331,7 +331,7 @@
                 <li><a href="login.html" style="color: #ffd700; font-weight: bold;">Premium Login</a></li>
                 <li><a href="register.html" style="color: #ffd700; font-weight: bold;">Register</a></li>
             </ul>
-            <button class="mobile-menu">?</button>
+            <button class="mobile-menu">☰</button>
         </nav>
     </header>
 
@@ -354,19 +354,19 @@
                     <h3>Recruitment Services</h3>
                     <p>Strategic talent acquisition and team building for network marketing organizations. We connect the right people with the right opportunities.</p>
                 </div>
-                
+
                 <div class="service-card">
                     <div class="service-icon"><i class="fa-solid fa-building"></i></div>
                     <h3>SME Solutions</h3>
                     <p>Tailored business solutions for small and medium enterprises. From strategy development to operational optimization.</p>
                 </div>
-                
+
                 <div class="service-card">
                     <div class="service-icon"><i class="fa-solid fa-star"></i></div>
                     <h3>Customer Review Services</h3>
                     <p>Reputation management and customer feedback systems to build trust and credibility for your business.</p>
                 </div>
-                
+
                 <div class="service-card">
                     <div class="service-icon"><i class="fa-solid fa-briefcase"></i></div>
                     <h3>Business Consulting</h3>
@@ -384,17 +384,17 @@
                     <h3>Network Marketing Newcomers</h3>
                     <p>Starting your network marketing journey? We provide the foundation and guidance you need.</p>
                 </div>
-                
+
                 <div class="audience-card">
                     <h3>Department Stores & Retail</h3>
                     <p>Established retail businesses looking to expand market reach and optimize operations.</p>
                 </div>
-                
+
                 <div class="audience-card">
                     <h3>Individual Distributors</h3>
                     <p>Ready to scale your distribution business? We help you grow and reach new markets.</p>
                 </div>
-                
+
                 <div class="audience-card">
                     <h3>Farmers & Producers</h3>
                     <p>Connect your produce to the right markets and maximize your agricultural investment.</p>
@@ -409,7 +409,7 @@
                 <h2>Ready to Transform Your Business?</h2>
                 <p>Let's discuss how Shen Business Solutions can help you achieve your goals and unlock new opportunities.</p>
                 <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Business+Consultation+with+Shen+Business+Solutions&details=Consultation+session+to+discuss+business+growth+opportunities+and+solutions&location=Busalamu" target="_blank" class="cta-button">Schedule Consultation</a>
-                
+
                 <div class="contact-info">
                     <div class="contact-item">
                         <div><i class="fa-solid fa-envelope"></i></div>
