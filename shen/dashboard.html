@@ -7,63 +7,59 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
+            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
             height: 100vh;
             margin: 0;
-            text-align: center;
         }
-        
+
         .dashboard-container {
-            background-color: white;
-            padding: 50px;
+            background-color: #fff;
+            padding: 40px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
         }
 
         .dashboard-container h1 {
             color: #2c5aa0;
             margin-bottom: 20px;
+            font-size: 2.5rem;
         }
 
         .dashboard-container p {
-            color: #555;
-            font-size: 1.1rem;
+            color: #666;
             margin-bottom: 30px;
+            line-height: 1.6;
         }
 
-        .logout-link {
-            display: inline-block;
-            background-color: #f44336;
+        .logout-button {
+            background-color: #d9534f;
             color: white;
-            padding: 10px 20px;
+            border: none;
+            padding: 12px 25px;
             border-radius: 5px;
-            text-decoration: none;
-            transition: background-color 0.3s;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
         }
 
-        .logout-link:hover {
-            background-color: #d32f2f;
+        .logout-button:hover {
+            background-color: #c9302c;
         }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-        <h1 id="welcomeMessage"></h1>
+        <h1>Welcome, User!</h1>
         <p>You have successfully logged in and are now viewing your private content.</p>
-        <a href="frontpage.html" class="logout-link">Log Out</a>
+        <form action="/logout" method="POST">
+            <button type="submit" class="logout-button">Log Out</button>
+        </form>
     </div>
-
-    <script>
-        const username = sessionStorage.getItem('username');
-        if (username) {
-            document.getElementById('welcomeMessage').textContent = `Welcome, ${username}!`;
-        } else {
-            document.getElementById('welcomeMessage').textContent = 'Welcome to Your Dashboard!';
-        }
-    </script>
 </body>
 </html>
