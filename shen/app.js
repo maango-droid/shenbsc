@@ -13,7 +13,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'chat_app.db'), (err) => {
         console.error('Error opening database:', err.message);
     } else {
         console.log('Connected to the SQLite database.');
-        // Create the users table if it doesn't exist
+        // Create the users and messages tables if they don't exist
         db.serialize(() => {
             db.run(`
                 CREATE TABLE IF NOT EXISTS users (
@@ -23,9 +23,25 @@ const db = new sqlite3.Database(path.join(__dirname, 'chat_app.db'), (err) => {
                 );
             `, (err) => {
                 if (err) {
-                    console.error('Error creating table:', err.message);
+                    console.error('Error creating users table:', err.message);
                 } else {
                     console.log('Users table created or already exists.');
+                }
+            });
+
+            db.run(`
+                CREATE TABLE IF NOT EXISTS messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    message TEXT NOT NULL,
+                    timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                );
+            `, (err) => {
+                if (err) {
+                    console.error('Error creating messages table:', err.message);
+                } else {
+                    console.log('Messages table created or already exists.');
                 }
             });
         });
@@ -60,13 +76,34 @@ app.get('/register.html', (req, res) => {
 
 // Secure Dashboard Route
 app.get('/dashboard.html', (req, res) => {
-    // Check if user is logged in
     if (req.session.userId) {
         res.sendFile(path.join(__dirname, 'dashboard.html'));
     } else {
-        // Redirect to login if not logged in
         res.redirect('/login.html');
     }
+});
+
+// Message API Routes
+app.get('/api/messages', (req, res) => {
+    db.all("SELECT messages.message, users.username FROM messages JOIN users ON messages.user_id = users.id ORDER BY messages.timestamp ASC", (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
+    });
+});
+
+app.post('/api/messages', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    const { message } = req.body;
+    db.run("INSERT INTO messages (user_id, message) VALUES (?, ?)", [req.session.userId, message], function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({ success: true, message: 'Message sent successfully' });
+    });
 });
 
 // Login and Logout routes
