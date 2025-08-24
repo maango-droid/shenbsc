@@ -13,6 +13,22 @@ const db = new sqlite3.Database(path.join(__dirname, 'chat_app.db'), (err) => {
         console.error('Error opening database:', err.message);
     } else {
         console.log('Connected to the SQLite database.');
+        // Create the users table if it doesn't exist
+        db.serialize(() => {
+            db.run(`
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL UNIQUE,
+                    password TEXT NOT NULL
+                );
+            `, (err) => {
+                if (err) {
+                    console.error('Error creating table:', err.message);
+                } else {
+                    console.log('Users table created or already exists.');
+                }
+            });
+        });
     }
 });
 
@@ -58,6 +74,7 @@ app.post('/login', (req, res) => {
     const { username, password } = req.body;
     db.get("SELECT * FROM users WHERE username = ?", [username], async (err, user) => {
         if (err) {
+            console.error('Login error:', err.message);
             return res.status(500).send('Server error');
         }
         if (!user) {
@@ -79,6 +96,7 @@ app.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     db.run("INSERT INTO users (username, password) VALUES (?, ?)", [username, hashedPassword], function(err) {
         if (err) {
+            console.error('Registration error:', err.message);
             return res.status(400).send('Username already exists.');
         }
         res.redirect('/login.html');
@@ -88,6 +106,7 @@ app.post('/register', async (req, res) => {
 app.post('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
+            console.error('Logout error:', err.message);
             return res.status(500).send('Could not log out.');
         }
         res.redirect('/frontpage.html');
