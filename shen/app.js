@@ -48,8 +48,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'chat_app.db'), (err) => {
     }
 });
 
-// Middleware
-app.use(express.static(path.join(__dirname, '')));
+// Middleware for parsing request bodies
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -61,7 +60,40 @@ app.use(session({
     cookie: { maxAge: 3600000 } // 1 hour
 }));
 
-// Serve HTML files
+// *** IMPORTANT: Define API routes BEFORE serving static files ***
+// This ensures that requests to /api/messages are handled by Express
+// and not mistaken for static files or redirected.
+
+// Message API Routes
+app.get('/api/messages', (req, res) => {
+    console.log('API /api/messages GET route hit!'); // Debug log to confirm route is reached
+    db.all("SELECT messages.message, users.username FROM messages JOIN users ON messages.user_id = users.id ORDER BY messages.timestamp ASC", (err, rows) => {
+        if (err) {
+            console.error('Error fetching messages from database:', err.message); // Added debug line
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
+    });
+});
+
+app.post('/api/messages', (req, res) => {
+    console.log('API /api/messages POST route hit!'); // Debug log to confirm route is reached
+    if (!req.session.userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    const { message } = req.body;
+    db.run("INSERT INTO messages (user_id, message) VALUES (?, ?)", [req.session.userId, message], function(err) {
+        if (err) {
+            console.error('Error inserting message into database:', err.message); // Added debug line
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({ success: true, message: 'Message sent successfully' });
+    });
+});
+
+// Serve HTML files (Place after API routes to avoid conflicts)
+app.use(express.static(path.join(__dirname, '')));
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontpage.html'));
 });
@@ -83,28 +115,6 @@ app.get('/dashboard.html', (req, res) => {
     }
 });
 
-// Message API Routes
-app.get('/api/messages', (req, res) => {
-    db.all("SELECT messages.message, users.username FROM messages JOIN users ON messages.user_id = users.id ORDER BY messages.timestamp ASC", (err, rows) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.json(rows);
-    });
-});
-
-app.post('/api/messages', (req, res) => {
-    if (!req.session.userId) {
-        return res.status(401).json({ success: false, message: 'Unauthorized' });
-    }
-    const { message } = req.body;
-    db.run("INSERT INTO messages (user_id, message) VALUES (?, ?)", [req.session.userId, message], function(err) {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.status(201).json({ success: true, message: 'Message sent successfully' });
-    });
-});
 
 // Login and Logout routes
 app.post('/login', (req, res) => {

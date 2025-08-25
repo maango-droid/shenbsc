@@ -112,13 +112,16 @@
             const messageForm = document.getElementById('message-form');
             const messageInput = document.getElementById('message-input');
 
+            // Define the base URL for API calls
+            const BASE_URL = window.location.origin;
+
             // Function to fetch messages from the server
             const fetchMessages = async () => {
                 try {
-                    const response = await fetch('/api/messages');
-                    const messages = await response.json();
+                    const response = await fetch(`${BASE_URL}/api/messages`); // Use absolute URL
                     
                     if (response.ok) {
+                        const messages = await response.json(); // Attempt to parse JSON
                         messageContainer.innerHTML = ''; // Clear loading message
                         messages.forEach(msg => {
                             const messageElement = document.createElement('div');
@@ -128,11 +131,13 @@
                         });
                         messageContainer.scrollTop = messageContainer.scrollHeight; // Scroll to bottom
                     } else {
-                        messageContainer.innerHTML = '<p style="text-align: center; color: red;">Failed to load messages.</p>';
+                        const errorText = await response.text(); // Read the response as text
+                        console.error('Server responded with non-OK status:', response.status, errorText);
+                        messageContainer.innerHTML = `<p style="text-align: center; color: red;">Failed to load messages. Server responded: ${response.status}.</p><p style="text-align: center; color: red;">Details: ${errorText.substring(0, 200)}...</p>`; // Show first 200 chars of response
                     }
                 } catch (error) {
                     console.error('Error fetching messages:', error);
-                    messageContainer.innerHTML = '<p style="text-align: center; color: red;">Failed to load messages.</p>';
+                    messageContainer.innerHTML = '<p style="text-align: center; color: red;">Failed to load messages due to a network or parsing error.</p>';
                 }
             };
 
@@ -142,7 +147,7 @@
                 const message = messageInput.value.trim();
                 if (message) {
                     try {
-                        await fetch('/api/messages', {
+                        await fetch(`${BASE_URL}/api/messages`, { // Use absolute URL
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ message })
