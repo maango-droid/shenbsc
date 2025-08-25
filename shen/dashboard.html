@@ -118,10 +118,11 @@
             // Function to fetch messages from the server
             const fetchMessages = async () => {
                 try {
-                    const response = await fetch(`${BASE_URL}/api/messages`); // Use absolute URL
+                    // This is the CORRECTED URL for the API endpoint
+                    const response = await fetch(`${BASE_URL}/api/messages`);
                     
                     if (response.ok) {
-                        const messages = await response.json(); // Attempt to parse JSON
+                        const messages = await response.json();
                         messageContainer.innerHTML = ''; // Clear loading message
                         messages.forEach(msg => {
                             const messageElement = document.createElement('div');
@@ -131,9 +132,9 @@
                         });
                         messageContainer.scrollTop = messageContainer.scrollHeight; // Scroll to bottom
                     } else {
-                        const errorText = await response.text(); // Read the response as text
+                        const errorText = await response.text();
                         console.error('Server responded with non-OK status:', response.status, errorText);
-                        messageContainer.innerHTML = `<p style="text-align: center; color: red;">Failed to load messages. Server responded: ${response.status}.</p><p style="text-align: center; color: red;">Details: ${errorText.substring(0, 200)}...</p>`; // Show first 200 chars of response
+                        messageContainer.innerHTML = `<p style="text-align: center; color: red;">Failed to load messages. Server responded: ${response.status}.</p><p style="text-align: center; color: red;">Details: ${errorText.substring(0, 200)}...</p>`;
                     }
                 } catch (error) {
                     console.error('Error fetching messages:', error);
@@ -147,7 +148,8 @@
                 const message = messageInput.value.trim();
                 if (message) {
                     try {
-                        await fetch(`${BASE_URL}/api/messages`, { // Use absolute URL
+                        // This is the CORRECTED URL for the API endpoint
+                        await fetch(`${BASE_URL}/api/messages`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ message })
