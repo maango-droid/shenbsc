@@ -60,9 +60,8 @@ app.use(session({
     cookie: { maxAge: 3600000 } // 1 hour
 }));
 
-// *** IMPORTANT: Define API routes BEFORE serving static files ***
-// This ensures that requests to /api/messages are handled by Express
-// and not mistaken for static files or redirected.
+// *** IMPORTANT: Define API routes BEFORE any other routes or static file serving ***
+// This ensures that requests to /api/messages are always handled by these explicit Express routes.
 
 // Message API Routes
 app.get('/api/messages', (req, res) => {
@@ -91,32 +90,7 @@ app.post('/api/messages', (req, res) => {
     });
 });
 
-// Serve HTML files (Place after API routes to avoid conflicts)
-app.use(express.static(path.join(__dirname, '')));
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontpage.html'));
-});
-
-app.get('/login.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
-});
-
-app.get('/register.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'register.html'));
-});
-
-// Secure Dashboard Route
-app.get('/dashboard.html', (req, res) => {
-    if (req.session.userId) {
-        res.sendFile(path.join(__dirname, 'dashboard.html'));
-    } else {
-        res.redirect('/login.html');
-    }
-});
-
-
-// Login and Logout routes
+// Login and Logout routes (These are POST, so they won't conflict with GET static files/HTML routes)
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     db.get("SELECT * FROM users WHERE username = ?", [username], async (err, user) => {
@@ -159,6 +133,41 @@ app.post('/logout', (req, res) => {
         res.redirect('/frontpage.html');
     });
 });
+
+
+// Serve specific HTML files (these must come AFTER API routes to avoid conflicts)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontpage.html'));
+});
+
+app.get('/login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/register.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'register.html'));
+});
+
+// Secure Dashboard Route
+app.get('/dashboard.html', (req, res) => {
+    if (req.session.userId) {
+        res.sendFile(path.join(__dirname, 'dashboard.html'));
+    } else {
+        res.redirect('/login.html');
+    }
+});
+
+// Serve static files for everything else as a last resort.
+// This needs to be AFTER all specific routes, including API and explicit HTML files.
+app.use(express.static(path.join(__dirname, '')));
+
+// Catch-all 404 handler for any requests not handled by the above routes.
+// This will tell us if our Express app is receiving the 404, or if Render's proxy is intercepting.
+app.use((req, res, next) => {
+    console.warn(`404 Not Found by Express: ${req.method} ${req.originalUrl}`);
+    res.status(404).send('<h1>404 - Not Found</h1><p>The requested URL was not found by the application.</p>');
+});
+
 
 // Start the server
 app.listen(PORT, () => {
