@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const session = require('express-session');
 const http = require('http');
 const { Server } = require('socket.io');
-const fs = require('fs'); // Required to read HTML file dynamically
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -19,7 +19,6 @@ const db = new sqlite3.Database(path.join(__dirname, 'chat_app.db'), (err) => {
         console.error('Error opening database:', err.message);
     } else {
         console.log('Connected to the SQLite database.');
-        // Create the users and messages tables if they don't exist
         db.serialize(() => {
             db.run(`
                 CREATE TABLE IF NOT EXISTS users (
@@ -54,11 +53,9 @@ const db = new sqlite3.Database(path.join(__dirname, 'chat_app.db'), (err) => {
     }
 });
 
-// Middleware for parsing request bodies
+// Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-// Session middleware
 app.use(session({
     secret: 'your_secret_key',
     resave: false,
@@ -69,7 +66,6 @@ app.use(session({
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log('A user connected via WebSocket');
-
     socket.on('disconnect', () => {
         console.log('User disconnected from WebSocket');
     });
@@ -78,7 +74,8 @@ io.on('connection', (socket) => {
 // Message API Routes
 app.get('/api/messages', (req, res) => {
     console.log('API /api/messages GET route hit!');
-    db.all("SELECT messages.message, users.username FROM messages JOIN users ON messages.user_id = users.id ORDER BY messages.timestamp ASC", (err, rows) => {
+    // Select the timestamp column
+    db.all("SELECT messages.message, users.username, messages.timestamp FROM messages JOIN users ON messages.user_id = users.id ORDER BY messages.timestamp ASC", (err, rows) => {
         if (err) {
             console.error('Error fetching messages from database:', err.message);
             return res.status(500).json({ error: err.message });
@@ -99,12 +96,15 @@ app.post('/api/messages', (req, res) => {
             return res.status(500).json({ error: err.message });
         }
 
-        db.get("SELECT username FROM users WHERE id = ?", [req.session.userId], (userErr, userRow) => {
-            if (userErr || !userRow) {
-                console.error('Error fetching username for new message:', userErr ? userErr.message : 'User not found');
-                return res.status(201).json({ success: true, message: 'Message sent successfully (username fetch failed)' });
+        const newMessageId = this.lastID; // Get the ID of the newly inserted message
+        // Fetch the username AND timestamp of the newly inserted message to emit
+        db.get("SELECT users.username, messages.message, messages.timestamp FROM messages JOIN users ON messages.user_id = users.id WHERE messages.id = ?", [newMessageId], (userErr, messageRow) => {
+            if (userErr || !messageRow) {
+                console.error('Error fetching message details for emission:', userErr ? userErr.message : 'Message details not found');
+                return res.status(201).json({ success: true, message: 'Message sent successfully (emission failed)' });
             }
-            io.emit('newMessage', { username: userRow.username, message: message });
+            // Emit the new message with username and timestamp
+            io.emit('newMessage', { username: messageRow.username, message: messageRow.message, timestamp: messageRow.timestamp });
             res.status(201).json({ success: true, message: 'Message sent successfully' });
         });
     });
@@ -184,7 +184,6 @@ app.get('/dashboard.html', (req, res) => {
                 console.error('Error reading dashboard.html file:', readErr.message);
                 return res.status(500).send('Error loading dashboard HTML.');
             }
-            // Inject the username into the HTML before sending
             const modifiedHtml = data.replace('<!-- USERNAME_PLACEHOLDER -->', `<script>const currentUsername = "${userRow.username}";</script>`);
             res.send(modifiedHtml);
         });
