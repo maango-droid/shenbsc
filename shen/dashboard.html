@@ -44,27 +44,27 @@
             overflow-y: auto;
             border-bottom: 1px solid #ddd;
         }
-        .message-wrapper { /* New wrapper to contain message and timestamp */
+        .message-wrapper {
             margin-bottom: 15px;
             display: flex;
-            flex-direction: column; /* Stack message content and timestamp */
+            flex-direction: column;
         }
         .message {
-            display: flex; /* Use flexbox for alignment */
-            align-items: flex-end; /* Align user/text to the bottom */
-            margin-bottom: 5px; /* Space between message bubble and timestamp */
+            display: flex;
+            align-items: flex-end;
+            margin-bottom: 5px;
         }
         .message.my-message {
-            justify-content: flex-end; /* Align to the right */
+            justify-content: flex-end;
         }
         .message.other-message {
-            justify-content: flex-start; /* Align to the left */
+            justify-content: flex-start;
         }
         .message .user {
             font-weight: bold;
             color: #2c5aa0;
-            margin-right: 5px; /* Space between username and message bubble */
-            white-space: nowrap; /* Prevent username from wrapping */
+            margin-right: 5px;
+            white-space: nowrap;
         }
         .message .text {
             background: #e9e9e9;
@@ -72,33 +72,32 @@
             border-radius: 15px;
             display: inline-block;
             word-wrap: break-word;
-            max-width: 70%; /* Limit message bubble width */
+            max-width: 70%;
         }
-        /* Styling for my messages */
         .message.my-message .user {
-            color: #23477a; /* A slightly darker blue for my username */
-            order: 2; /* Put username after text bubble for right-aligned messages */
-            margin-left: 5px; /* Space between message bubble and username */
+            color: #23477a;
+            order: 2;
+            margin-left: 5px;
             margin-right: 0;
         }
         .message.my-message .text {
-            background-color: #2c5aa0; /* Blue background for my messages */
+            background-color: #2c5aa0;
             color: white;
-            order: 1; /* Put text bubble first for right-aligned messages */
+            order: 1;
         }
         .timestamp {
             font-size: 0.75rem;
             color: #888;
             margin-top: 2px;
-            padding: 0 5px; /* Little padding to align with message */
+            padding: 0 5px;
         }
         .message-wrapper.my-message .timestamp {
-            text-align: right; /* Align timestamp to the right for my messages */
-            padding-right: 15px; /* Adjust padding to align with bubble */
+            text-align: right;
+            padding-right: 15px;
         }
         .message-wrapper.other-message .timestamp {
-            text-align: left; /* Align timestamp to the left for other messages */
-            padding-left: 15px; /* Adjust padding to align with bubble */
+            text-align: left;
+            padding-left: 15px;
         }
 
         .message-form {
@@ -162,21 +161,27 @@
 
             const socket = io();
 
+            // Helper function to format timestamp to UTC time
             const formatTimestamp = (isoString) => {
                 if (!isoString) return '';
                 const date = new Date(isoString);
-                // Check if the date is valid after parsing
                 if (isNaN(date.getTime())) {
                     console.error("Invalid date string received:", isoString);
                     return "Invalid Date";
                 }
-                const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-                return date.toLocaleString(undefined, options);
+
+                // Format options for UTC display
+                const optionsDate = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' };
+                const optionsTime = { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' };
+
+                const formattedDate = date.toLocaleDateString(undefined, optionsDate);
+                const formattedTime = date.toLocaleTimeString(undefined, optionsTime);
+                
+                return `${formattedDate}, ${formattedTime} UTC`; // Explicitly add UTC to clarify
             };
 
             const appendMessage = (msg) => {
-                // DEBUG: Log raw timestamp on frontend before formatting
-                console.log('Raw timestamp on frontend (appendMessage):', msg.timestamp);
+                console.log('Raw timestamp on frontend (appendMessage):', msg.timestamp); // Debug log
 
                 const messageWrapper = document.createElement('div');
                 messageWrapper.classList.add('message-wrapper');
