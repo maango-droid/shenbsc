@@ -3,12 +3,13 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
-const http = require('http'); // Required for socket.io
-const { Server } = require('socket.io'); // Required for socket.io
+const http = require('http');
+const { Server } = require('socket.io');
+const fs = require('fs'); // Required to read HTML file dynamically
 
 const app = express();
-const server = http.createServer(app); // Create an HTTP server instance from your Express app
-const io = new Server(server); // Initialize socket.io with the HTTP server
+const server = http.createServer(app);
+const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
@@ -59,10 +60,10 @@ app.use(express.json());
 
 // Session middleware
 app.use(session({
-    secret: 'your_secret_key', // Replace with a strong, random key
+    secret: 'your_secret_key',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 3600000 } // 1 hour
+    cookie: { maxAge: 3600000 }
 }));
 
 // Socket.IO connection handling
@@ -74,11 +75,9 @@ io.on('connection', (socket) => {
     });
 });
 
-// *** IMPORTANT: Define API routes BEFORE any other routes or static file serving ***
-
 // Message API Routes
 app.get('/api/messages', (req, res) => {
-    console.log('API /api/messages GET route hit!'); // Debug log to confirm route is reached
+    console.log('API /api/messages GET route hit!');
     db.all("SELECT messages.message, users.username FROM messages JOIN users ON messages.user_id = users.id ORDER BY messages.timestamp ASC", (err, rows) => {
         if (err) {
             console.error('Error fetching messages from database:', err.message);
@@ -89,7 +88,7 @@ app.get('/api/messages', (req, res) => {
 });
 
 app.post('/api/messages', (req, res) => {
-    console.log('API /api/messages POST route hit!'); // Debug log to confirm route is reached
+    console.log('API /api/messages POST route hit!');
     if (!req.session.userId) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
@@ -100,14 +99,11 @@ app.post('/api/messages', (req, res) => {
             return res.status(500).json({ error: err.message });
         }
 
-        // After successfully saving, fetch the username to emit the message in real-time
         db.get("SELECT username FROM users WHERE id = ?", [req.session.userId], (userErr, userRow) => {
             if (userErr || !userRow) {
                 console.error('Error fetching username for new message:', userErr ? userErr.message : 'User not found');
-                // Even if username fetch fails, still send success response
                 return res.status(201).json({ success: true, message: 'Message sent successfully (username fetch failed)' });
             }
-            // Emit the new message to all connected clients
             io.emit('newMessage', { username: userRow.username, message: message });
             res.status(201).json({ success: true, message: 'Message sent successfully' });
         });
@@ -171,26 +167,40 @@ app.get('/register.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'register.html'));
 });
 
-// Secure Dashboard Route
+// Secure Dashboard Route - Dynamically inject username
 app.get('/dashboard.html', (req, res) => {
-    if (req.session.userId) {
-        res.sendFile(path.join(__dirname, 'dashboard.html'));
-    } else {
-        res.redirect('/login.html');
+    if (!req.session.userId) {
+        return res.redirect('/login.html');
     }
+
+    db.get("SELECT username FROM users WHERE id = ?", [req.session.userId], (err, userRow) => {
+        if (err || !userRow) {
+            console.error('Error fetching username for dashboard:', err ? err.message : 'User not found for session');
+            return res.status(500).send('Error loading dashboard: User not found.');
+        }
+
+        fs.readFile(path.join(__dirname, 'dashboard.html'), 'utf8', (readErr, data) => {
+            if (readErr) {
+                console.error('Error reading dashboard.html file:', readErr.message);
+                return res.status(500).send('Error loading dashboard HTML.');
+            }
+            // Inject the username into the HTML before sending
+            const modifiedHtml = data.replace('<!-- USERNAME_PLACEHOLDER -->', `<script>const currentUsername = "${userRow.username}";</script>`);
+            res.send(modifiedHtml);
+        });
+    });
 });
 
 // Serve static files for everything else as a last resort.
 app.use(express.static(path.join(__dirname, '')));
 
-// Catch-all 404 handler for any requests not handled by the above routes.
+// Catch-all 404 handler
 app.use((req, res, next) => {
     console.warn(`404 Not Found by Express: ${req.method} ${req.originalUrl}`);
     res.status(404).send('<h1>404 - Not Found</h1><p>The requested URL was not found by the application.</p>');
 });
 
-
-// Start the server using the HTTP server instance, not the Express app directly
+// Start the server using the HTTP server instance
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
