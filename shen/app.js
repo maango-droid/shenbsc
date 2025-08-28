@@ -74,12 +74,13 @@ io.on('connection', (socket) => {
 // Message API Routes
 app.get('/api/messages', (req, res) => {
     console.log('API /api/messages GET route hit!');
-    // Select the timestamp column
     db.all("SELECT messages.message, users.username, messages.timestamp FROM messages JOIN users ON messages.user_id = users.id ORDER BY messages.timestamp ASC", (err, rows) => {
         if (err) {
             console.error('Error fetching messages from database:', err.message);
             return res.status(500).json({ error: err.message });
         }
+        // DEBUG: Log raw timestamps from DB for GET request
+        console.log('Raw timestamps from DB (GET /api/messages):', rows.map(row => row.timestamp));
         res.json(rows);
     });
 });
@@ -96,14 +97,14 @@ app.post('/api/messages', (req, res) => {
             return res.status(500).json({ error: err.message });
         }
 
-        const newMessageId = this.lastID; // Get the ID of the newly inserted message
-        // Fetch the username AND timestamp of the newly inserted message to emit
+        const newMessageId = this.lastID;
         db.get("SELECT users.username, messages.message, messages.timestamp FROM messages JOIN users ON messages.user_id = users.id WHERE messages.id = ?", [newMessageId], (userErr, messageRow) => {
             if (userErr || !messageRow) {
                 console.error('Error fetching message details for emission:', userErr ? userErr.message : 'Message details not found');
                 return res.status(201).json({ success: true, message: 'Message sent successfully (emission failed)' });
             }
-            // Emit the new message with username and timestamp
+            // DEBUG: Log raw timestamp from DB for POST request before emitting
+            console.log('Raw timestamp from DB (POST /api/messages) before emitting:', messageRow.timestamp);
             io.emit('newMessage', { username: messageRow.username, message: messageRow.message, timestamp: messageRow.timestamp });
             res.status(201).json({ success: true, message: 'Message sent successfully' });
         });
