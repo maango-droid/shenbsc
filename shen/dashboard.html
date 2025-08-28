@@ -161,7 +161,6 @@
 
             const socket = io();
 
-            // Helper function to format timestamp to UTC time
             const formatTimestamp = (isoString) => {
                 if (!isoString) return '';
                 const date = new Date(isoString);
@@ -181,7 +180,8 @@
             };
 
             const appendMessage = (msg) => {
-                console.log('Raw timestamp on frontend (appendMessage):', msg.timestamp); // Debug log
+                // DEBUG: Log raw timestamp on frontend before formatting
+                console.log('Raw timestamp on frontend (appendMessage):', msg.timestamp);
 
                 const messageWrapper = document.createElement('div');
                 messageWrapper.classList.add('message-wrapper');

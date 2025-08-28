@@ -19,6 +19,9 @@ const db = new sqlite3.Database(path.join(__dirname, 'chat_app.db'), (err) => {
         console.error('Error opening database:', err.message);
     } else {
         console.log('Connected to the SQLite database.');
+        // DEBUG: Log server's current time when DB connects
+        console.log('Server Node.js current time (DB connection):', new Date().toISOString());
+
         db.serialize(() => {
             db.run(`
                 CREATE TABLE IF NOT EXISTS users (
@@ -34,6 +37,7 @@ const db = new sqlite3.Database(path.join(__dirname, 'chat_app.db'), (err) => {
                 }
             });
 
+            // Ensure the messages table still has DEFAULT CURRENT_TIMESTAMP
             db.run(`
                 CREATE TABLE IF NOT EXISTS messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
