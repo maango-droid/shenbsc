@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Dashboard</title>
+    <!-- Include Socket.IO client library -->
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -112,25 +114,35 @@
             const messageForm = document.getElementById('message-form');
             const messageInput = document.getElementById('message-input');
 
-            // Define the base URL for API calls
-            const BASE_URL = window.location.origin;
+            // Initialize Socket.IO connection
+            const socket = io();
 
-            // Function to fetch messages from the server
+            // Function to append a single message to the UI
+            const appendMessage = (msg) => {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message');
+                messageElement.innerHTML = `<span class="user">${msg.username}:</span> <span class="text">${msg.message}</span>`;
+                messageContainer.appendChild(messageElement);
+                messageContainer.scrollTop = messageContainer.scrollHeight; // Scroll to bottom
+            };
+
+            // Listen for new messages from the server
+            socket.on('newMessage', (msg) => {
+                console.log('Received new message via WebSocket:', msg);
+                appendMessage(msg);
+            });
+
+            // Function to fetch ALL messages from the server (for initial load)
             const fetchMessages = async () => {
                 try {
-                    // This is the CORRECTED URL for the API endpoint
-                    const response = await fetch(`${BASE_URL}/api/messages`);
+                    const response = await fetch('/api/messages'); // No need for BASE_URL with socket.io client
                     
                     if (response.ok) {
                         const messages = await response.json();
                         messageContainer.innerHTML = ''; // Clear loading message
                         messages.forEach(msg => {
-                            const messageElement = document.createElement('div');
-                            messageElement.classList.add('message');
-                            messageElement.innerHTML = `<span class="user">${msg.username}:</span> <span class="text">${msg.message}</span>`;
-                            messageContainer.appendChild(messageElement);
+                            appendMessage(msg); // Use the new append function
                         });
-                        messageContainer.scrollTop = messageContainer.scrollHeight; // Scroll to bottom
                     } else {
                         const errorText = await response.text();
                         console.error('Server responded with non-OK status:', response.status, errorText);
@@ -148,14 +160,13 @@
                 const message = messageInput.value.trim();
                 if (message) {
                     try {
-                        // This is the CORRECTED URL for the API endpoint
-                        await fetch(`${BASE_URL}/api/messages`, {
+                        await fetch('/api/messages', { // No need for BASE_URL with socket.io client
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ message })
                         });
                         messageInput.value = ''; // Clear input
-                        fetchMessages(); // Reload messages
+                        // DO NOT call fetchMessages() here. The WebSocket will broadcast the new message.
                     } catch (error) {
                         console.error('Error sending message:', error);
                     }

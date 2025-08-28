@@ -3,8 +3,13 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
+const http = require('http'); // Required for socket.io
+const { Server } = require('socket.io'); // Required for socket.io
 
 const app = express();
+const server = http.createServer(app); // Create an HTTP server instance from your Express app
+const io = new Server(server); // Initialize socket.io with the HTTP server
+
 const PORT = process.env.PORT || 3000;
 
 // Connect to your database
@@ -60,15 +65,23 @@ app.use(session({
     cookie: { maxAge: 3600000 } // 1 hour
 }));
 
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+    console.log('A user connected via WebSocket');
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected from WebSocket');
+    });
+});
+
 // *** IMPORTANT: Define API routes BEFORE any other routes or static file serving ***
-// This ensures that requests to /api/messages are always handled by these explicit Express routes.
 
 // Message API Routes
 app.get('/api/messages', (req, res) => {
     console.log('API /api/messages GET route hit!'); // Debug log to confirm route is reached
     db.all("SELECT messages.message, users.username FROM messages JOIN users ON messages.user_id = users.id ORDER BY messages.timestamp ASC", (err, rows) => {
         if (err) {
-            console.error('Error fetching messages from database:', err.message); // Added debug line
+            console.error('Error fetching messages from database:', err.message);
             return res.status(500).json({ error: err.message });
         }
         res.json(rows);
@@ -83,14 +96,25 @@ app.post('/api/messages', (req, res) => {
     const { message } = req.body;
     db.run("INSERT INTO messages (user_id, message) VALUES (?, ?)", [req.session.userId, message], function(err) {
         if (err) {
-            console.error('Error inserting message into database:', err.message); // Added debug line
+            console.error('Error inserting message into database:', err.message);
             return res.status(500).json({ error: err.message });
         }
-        res.status(201).json({ success: true, message: 'Message sent successfully' });
+
+        // After successfully saving, fetch the username to emit the message in real-time
+        db.get("SELECT username FROM users WHERE id = ?", [req.session.userId], (userErr, userRow) => {
+            if (userErr || !userRow) {
+                console.error('Error fetching username for new message:', userErr ? userErr.message : 'User not found');
+                // Even if username fetch fails, still send success response
+                return res.status(201).json({ success: true, message: 'Message sent successfully (username fetch failed)' });
+            }
+            // Emit the new message to all connected clients
+            io.emit('newMessage', { username: userRow.username, message: message });
+            res.status(201).json({ success: true, message: 'Message sent successfully' });
+        });
     });
 });
 
-// Login and Logout routes (These are POST, so they won't conflict with GET static files/HTML routes)
+// Login and Logout routes
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     db.get("SELECT * FROM users WHERE username = ?", [username], async (err, user) => {
@@ -134,8 +158,7 @@ app.post('/logout', (req, res) => {
     });
 });
 
-
-// Serve specific HTML files (these must come AFTER API routes to avoid conflicts)
+// Serve specific HTML files
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontpage.html'));
 });
@@ -158,18 +181,16 @@ app.get('/dashboard.html', (req, res) => {
 });
 
 // Serve static files for everything else as a last resort.
-// This needs to be AFTER all specific routes, including API and explicit HTML files.
 app.use(express.static(path.join(__dirname, '')));
 
 // Catch-all 404 handler for any requests not handled by the above routes.
-// This will tell us if our Express app is receiving the 404, or if Render's proxy is intercepting.
 app.use((req, res, next) => {
     console.warn(`404 Not Found by Express: ${req.method} ${req.originalUrl}`);
     res.status(404).send('<h1>404 - Not Found</h1><p>The requested URL was not found by the application.</p>');
 });
 
 
-// Start the server
-app.listen(PORT, () => {
+// Start the server using the HTTP server instance, not the Express app directly
+server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
