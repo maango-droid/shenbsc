@@ -19,7 +19,6 @@ const db = new sqlite3.Database(path.join(__dirname, 'chat_app.db'), (err) => {
         console.error('Error opening database:', err.message);
     } else {
         console.log('Connected to the SQLite database.');
-        // DEBUG: Log server's current time when DB connects
         console.log('Server Node.js current time (DB connection):', new Date().toISOString());
 
         db.serialize(() => {
@@ -37,13 +36,13 @@ const db = new sqlite3.Database(path.join(__dirname, 'chat_app.db'), (err) => {
                 }
             });
 
-            // Ensure the messages table still has DEFAULT CURRENT_TIMESTAMP
+            // Modify messages table to allow passing timestamp, remove DEFAULT CURRENT_TIMESTAMP
             db.run(`
                 CREATE TABLE IF NOT EXISTS messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER,
                     message TEXT NOT NULL,
-                    timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
+                    timestamp TEXT, -- Removed DEFAULT CURRENT_TIMESTAMP
                     FOREIGN KEY (user_id) REFERENCES users(id)
                 );
             `, (err) => {
@@ -83,7 +82,6 @@ app.get('/api/messages', (req, res) => {
             console.error('Error fetching messages from database:', err.message);
             return res.status(500).json({ error: err.message });
         }
-        // DEBUG: Log raw timestamps from DB for GET request
         console.log('Raw timestamps from DB (GET /api/messages):', rows.map(row => row.timestamp));
         res.json(rows);
     });
@@ -94,8 +92,12 @@ app.post('/api/messages', (req, res) => {
     if (!req.session.userId) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
-    const { message } = req.body;
-    db.run("INSERT INTO messages (user_id, message) VALUES (?, ?)", [req.session.userId, message], function(err) {
+    const { message, timestamp } = req.body; // Expect timestamp from client
+    
+    // DEBUG: Log received timestamp
+    console.log('Received timestamp from client:', timestamp);
+
+    db.run("INSERT INTO messages (user_id, message, timestamp) VALUES (?, ?, ?)", [req.session.userId, message, timestamp], function(err) {
         if (err) {
             console.error('Error inserting message into database:', err.message);
             return res.status(500).json({ error: err.message });
@@ -107,7 +109,6 @@ app.post('/api/messages', (req, res) => {
                 console.error('Error fetching message details for emission:', userErr ? userErr.message : 'Message details not found');
                 return res.status(201).json({ success: true, message: 'Message sent successfully (emission failed)' });
             }
-            // DEBUG: Log raw timestamp from DB for POST request before emitting
             console.log('Raw timestamp from DB (POST /api/messages) before emitting:', messageRow.timestamp);
             io.emit('newMessage', { username: messageRow.username, message: messageRow.message, timestamp: messageRow.timestamp });
             res.status(201).json({ success: true, message: 'Message sent successfully' });
