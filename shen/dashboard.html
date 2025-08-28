@@ -44,27 +44,27 @@
             overflow-y: auto;
             border-bottom: 1px solid #ddd;
         }
-        .message-wrapper {
+        .message-wrapper { /* New wrapper to contain message and timestamp */
             margin-bottom: 15px;
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* Stack message content and timestamp */
         }
         .message {
-            display: flex;
-            align-items: flex-end;
-            margin-bottom: 5px;
+            display: flex; /* Use flexbox for alignment */
+            align-items: flex-end; /* Align user/text to the bottom */
+            margin-bottom: 5px; /* Space between message bubble and timestamp */
         }
         .message.my-message {
-            justify-content: flex-end;
+            justify-content: flex-end; /* Align to the right */
         }
         .message.other-message {
-            justify-content: flex-start;
+            justify-content: flex-start; /* Align to the left */
         }
         .message .user {
             font-weight: bold;
             color: #2c5aa0;
-            margin-right: 5px;
-            white-space: nowrap;
+            margin-right: 5px; /* Space between username and message bubble */
+            white-space: nowrap; /* Prevent username from wrapping */
         }
         .message .text {
             background: #e9e9e9;
@@ -72,32 +72,33 @@
             border-radius: 15px;
             display: inline-block;
             word-wrap: break-word;
-            max-width: 70%;
+            max-width: 70%; /* Limit message bubble width */
         }
+        /* Styling for my messages */
         .message.my-message .user {
-            color: #23477a;
-            order: 2;
-            margin-left: 5px;
+            color: #23477a; /* A slightly darker blue for my username */
+            order: 2; /* Put username after text bubble for right-aligned messages */
+            margin-left: 5px; /* Space between message bubble and username */
             margin-right: 0;
         }
         .message.my-message .text {
-            background-color: #2c5aa0;
+            background-color: #2c5aa0; /* Blue background for my messages */
             color: white;
-            order: 1;
+            order: 1; /* Put text bubble first for right-aligned messages */
         }
         .timestamp {
             font-size: 0.75rem;
             color: #888;
             margin-top: 2px;
-            padding: 0 5px;
+            padding: 0 5px; /* Little padding to align with message */
         }
         .message-wrapper.my-message .timestamp {
-            text-align: right;
-            padding-right: 15px;
+            text-align: right; /* Align timestamp to the right for my messages */
+            padding-right: 15px; /* Adjust padding to align with bubble */
         }
         .message-wrapper.other-message .timestamp {
-            text-align: left;
-            padding-left: 15px;
+            text-align: left; /* Align timestamp to the left for other messages */
+            padding-left: 15px; /* Adjust padding to align with bubble */
         }
 
         .message-form {
@@ -158,10 +159,10 @@
             const messageInput = document.getElementById('message-input');
 
             const currentUsername = typeof window.currentUsername !== 'undefined' ? window.currentUsername : 'Guest';
+            console.log('Current logged-in username (frontend):', currentUsername); // Debug current username
 
             const socket = io();
 
-            // Helper function to format timestamp to client's local time
             const formatTimestamp = (isoString) => {
                 if (!isoString) return '';
                 const date = new Date(isoString);
@@ -170,21 +171,18 @@
                     return "Invalid Date";
                 }
 
-                // Format options for local display
                 const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
                 return date.toLocaleString(undefined, options); // Format to user's local time
             };
 
             const appendMessage = (msg) => {
-                // DEBUG: Log raw timestamp on frontend before formatting
-                console.log('Raw timestamp on frontend (appendMessage):', msg.timestamp);
-
                 const messageWrapper = document.createElement('div');
                 messageWrapper.classList.add('message-wrapper');
 
                 const messageElement = document.createElement('div');
                 messageElement.classList.add('message');
 
+                // Determine if it's my message or another user's
                 if (msg.username === currentUsername) {
                     messageWrapper.classList.add('my-message');
                     messageElement.classList.add('my-message');
@@ -192,6 +190,10 @@
                     messageWrapper.classList.add('other-message');
                     messageElement.classList.add('other-message');
                 }
+                
+                // Debugging classes applied
+                console.log(`Message from ${msg.username} (Is mine: ${msg.username === currentUsername}) - Classes: ${messageWrapper.classList.value}, ${messageElement.classList.value}`);
+
 
                 messageElement.innerHTML = `
                     <span class="user">${msg.username}:</span> 
@@ -238,15 +240,12 @@
                 e.preventDefault();
                 const message = messageInput.value.trim();
                 if (message) {
-                    // Capture client-side timestamp in ISO format
                     const clientTimestamp = new Date().toISOString(); 
-                    console.log('Client-side timestamp being sent:', clientTimestamp); // DEBUG log
-
                     try {
                         await fetch('/api/messages', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ message, timestamp: clientTimestamp }) // Send client timestamp
+                            body: JSON.stringify({ message, timestamp: clientTimestamp })
                         });
                         messageInput.value = '';
                     } catch (error) {
